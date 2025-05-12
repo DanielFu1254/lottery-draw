@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>抽獎活動</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #fdfbfb, #ebedee);
+      padding: 1rem;
+      color: #333;
+      text-align: center;
+    }
+    h1 {
+      color: #2c3e50;
+      margin-bottom: 1rem;
+    }
+    button {
+      padding: 12px 24px;
+      font-size: 1.1rem;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: background-color 0.3s;
+      margin: 0.5rem;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+    #currentPrize {
+      margin: 1rem 0;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #7f8c8d;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+      max-width: 600px;
+      margin: 2rem auto;
+      text-align: left;
+    }
+    li {
+      margin: 0.5rem 0;
+      background: white;
+      padding: 10px 16px;
+      border-radius: 6px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .winner {
+      font-weight: bold;
+      color: #27ae60;
+    }
+    form {
+      margin: 2rem auto;
+      max-width: 100%;
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    form input {
+      padding: 8px;
+      margin: 0.3rem;
+      width: 90%;
+      max-width: 300px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎁 抽獎活動（從第13名抽到第1名）</h1>
+
+  <form id="participantForm" onsubmit="addParticipant(); return false;">
+    <input type="text" id="name" placeholder="參與者姓名" required>
+    <input type="number" id="entries" placeholder="參與次數" required min="1">
+    <button type="submit">新增參與者</button>
+  </form>
+
+  <button onclick="startDraw()">開始抽獎</button>
+  <button onclick="drawNext()">抽出下一個獎項</button>
+
+  <p id="currentPrize"></p>
+  <ul id="results"></ul>
+
+  <script>
+    let participants = [];
+    let remaining = [];
+    const totalPrizes = 13;
+    let currentRank = totalPrizes;
+
+    function addParticipant() {
+      const name = document.getElementById('name').value.trim();
+      const entries = parseInt(document.getElementById('entries').value);
+
+      if (participants.length >= totalPrizes) {
+        alert("最多只能輸入 13 位參與者！");
+        return;
+      }
+
+      if (!name || entries <= 0) return;
+
+      participants.push({ name, entries });
+      document.getElementById('participantForm').reset();
+      alert(`已新增：${name}（${entries} 次）`);
+    }
+
+    function startDraw() {
+      if (participants.length < totalPrizes) {
+        alert("參與者必須至少有 13 位。");
+        return;
+      }
+      remaining = [...participants];
+      currentRank = totalPrizes;
+      document.getElementById("results").innerHTML = "";
+      document.getElementById("currentPrize").textContent = "開始抽獎！請按下『抽出下一個獎項』。";
+    }
+
+    function drawNext() {
+      if (remaining.length === 0 || currentRank === 0) return;
+
+      document.getElementById("currentPrize").textContent = `正在抽出第 ${currentRank} 名...`;
+
+      const weights = remaining.map(p => 1 / p.entries);
+      const totalWeight = weights.reduce((a, b) => a + b, 0);
+      const rand = Math.random() * totalWeight;
+
+      let acc = 0;
+      let selectedIndex = 0;
+      for (let i = 0; i < weights.length; i++) {
+        acc += weights[i];
+        if (rand <= acc) {
+          selectedIndex = i;
+          break;
+        }
+      }
+
+      const winner = remaining[selectedIndex];
+      remaining.splice(selectedIndex, 1);
+
+      const li = document.createElement("li");
+      li.className = "winner";
+      li.textContent = `第 ${currentRank} 名：${winner.name}（參與 ${winner.entries} 次）`;
+      document.getElementById("results").prepend(li);
+
+      currentRank--;
+      if (currentRank === 0) {
+        document.getElementById("currentPrize").textContent = "✅ 抽獎完成！";
+      }
+    }
+  </script>
+</body>
+</html>
